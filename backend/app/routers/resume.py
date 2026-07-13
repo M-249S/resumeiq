@@ -1,4 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from io import BytesIO
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from pypdf import PdfReader
 
 router = APIRouter()
 
@@ -11,8 +14,19 @@ async def upload_resume(file: UploadFile = File(...)):
             detail="Only PDF files are allowed."
         )
 
+    pdf_bytes = await file.read()
+
+    reader = PdfReader(BytesIO(pdf_bytes))
+
+    text = ""
+
+    for page in reader.pages:
+        extracted = page.extract_text()
+        if extracted:
+            text += extracted + "\n"
+
     return {
         "filename": file.filename,
-        "content_type": file.content_type,
-        "message": "Resume uploaded successfully."
+        "pages": len(reader.pages),
+        "text": text.strip()
     }
