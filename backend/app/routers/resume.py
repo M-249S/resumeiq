@@ -3,6 +3,8 @@ from io import BytesIO
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pypdf import PdfReader
 
+from app.services.ai_service import analyze_resume
+
 router = APIRouter()
 
 
@@ -25,8 +27,10 @@ async def upload_resume(file: UploadFile = File(...)):
         if extracted:
             text += extracted + "\n"
 
+    analysis = analyze_resume(text)
+
     return {
         "filename": file.filename,
         "pages": len(reader.pages),
-        "text": text.strip()
+        "analysis": analysis
     }
