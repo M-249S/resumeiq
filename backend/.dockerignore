@@ -1,0 +1,19 @@
+# Prevents local secrets and dev artifacts from ever being copied into
+# the image (COPY . . would otherwise include them if present on disk).
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+.git/
+.gitignore
+*.md
+
+.vscode/
+.DS_Store

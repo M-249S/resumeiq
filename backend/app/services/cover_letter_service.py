@@ -1,24 +1,16 @@
-import os
 
-from google import genai
 from dotenv import load_dotenv
 
-load_dotenv()
+from app.services.ai_client import generate
+from app.utils.markdown_utils import clean_markdown
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+load_dotenv()
 
 
 def generate_cover_letter(
     resume_text: str,
     job_description: str,
 ):
-    model = os.getenv(
-        "GEMINI_MODEL",
-        "models/gemini-3.5-flash",
-    )
-
     prompt = f"""
 You are an expert career coach and professional resume writer.
 
@@ -45,9 +37,15 @@ Job Description:
 {job_description}
 """
 
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-    )
+    text = generate(prompt).strip()
 
-    return response.text
+    if text.startswith("```markdown"):
+        text = text[12:]
+
+    elif text.startswith("```"):
+        text = text[3:]
+
+    if text.endswith("```"):
+        text = text[:-3]
+
+    return clean_markdown(text)

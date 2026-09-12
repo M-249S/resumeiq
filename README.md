@@ -1,7 +1,6 @@
-# AI Resume Optimizer
+# ResumeIQ
 
-An AI-powered Resume Optimization platform built with FastAPI, React, and Google Gemini.
-
+AI-powered ATS Resume Analyzer & Resume Optimizer
 The application analyzes resumes, calculates ATS compatibility, rewrites resumes professionally, and generates personalized cover letters using AI.
 
 ---

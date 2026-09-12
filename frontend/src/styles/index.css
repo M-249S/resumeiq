@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
+
+@theme {
+  /* Editorial palette: warm paper, ink navy, one precise forest-green
+     accent. Deliberately not dark-mode-first, not cyan/blue gradients,
+     not warm-cream-terracotta — see README for the reasoning. */
+  --color-paper: #faf9f6;
+  --color-paper-raised: #ffffff;
+  --color-ink: #14213d;
+  --color-ink-muted: #4b5768;
+  --color-ink-faint: #8891a0;
+  --color-border: #e4e1d9;
+  --color-border-strong: #c9c5b8;
+
+  --color-accent: #1b4332;
+  --color-accent-hover: #163a2b;
+  --color-accent-soft: #e8efe9;
+
+  --color-success: #2f6f4e;
+  --color-warning: #b8862f;
+  --color-danger: #a83b3b;
+
+  --font-display: "Fraunces Variable", "Georgia", serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+}

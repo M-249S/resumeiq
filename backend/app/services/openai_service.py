@@ -61,10 +61,6 @@ Return:
 
     text = response.choices[0].message.content
 
-    print("\n========== OpenAI Analysis ==========\n")
-    print(text)
-    print("\n=====================================\n")
-
     return json.loads(text)
 
 
@@ -108,10 +104,6 @@ Resume:
 
     result = response.choices[0].message.content
 
-    print("\n========== OpenAI Rewrite ==========\n")
-    print(result)
-    print("\n====================================\n")
-
     return result
 
 
@@ -149,9 +141,5 @@ Return only the cover letter.
     )
 
     result = response.choices[0].message.content
-
-    print("\n========== OpenAI Cover Letter ==========\n")
-    print(result)
-    print("\n=========================================\n")
 
     return result

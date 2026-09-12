@@ -1,0 +1,18 @@
+# Development/CI-only tooling — never installed in the production image.
+# Fully pinned for the same reproducibility reason as requirements.txt.
+#
+# Direct dependencies: pytest, flake8, bandit
+
+bandit==1.9.4
+flake8==7.3.0
+iniconfig==2.3.0
+markdown-it-py==4.2.0
+mccabe==0.7.0
+mdurl==0.1.2
+pluggy==1.6.0
+pycodestyle==2.14.0
+pyflakes==3.4.0
+Pygments==2.21.0
+pytest==9.1.1
+rich==15.0.0
+stevedore==5.9.1
