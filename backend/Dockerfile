@@ -24,9 +24,16 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
+# Render (and most container hosts) assign the listen port at runtime via
+# $PORT rather than letting the image hard-code one — EXPOSE 8000 below is
+# just documentation/local-default, the CMD actually binds to $PORT.
 EXPOSE 8000
+ENV PORT=8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f "http://localhost:${PORT:-8000}/health" || exit 1
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# alembic upgrade head runs on every container start, so a fresh Render
+# deploy (or a new migration file added later) always lands on a
+# schema that matches the code — no separate manual migration step.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

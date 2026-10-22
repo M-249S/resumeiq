@@ -1,5 +1,10 @@
 import { api } from "@/lib/api";
-import type { ResumeUploadResponse, CoverLetterResponse } from "@/types/resume";
+import type {
+  ResumeUploadResponse,
+  CoverLetterResponse,
+  ResumeHistoryItem,
+  ResumeHistoryDetail,
+} from "@/types/resume";
 
 /**
  * POST /resume/upload — multipart/form-data. Do NOT set a Content-Type
@@ -78,4 +83,23 @@ export async function downloadCoverLetterDocx(
     responseType: "blob",
   });
   return response.data as Blob;
+}
+
+/** GET /resume/history — the signed-in user's past analyses, newest first. */
+export async function getResumeHistory(): Promise<ResumeHistoryItem[]> {
+  const { data } = await api.get<ResumeHistoryItem[]>("/resume/history");
+  return data;
+}
+
+/** GET /resume/history/{id} — a single past analysis, full breakdown included. */
+export async function getResumeHistoryDetail(
+  id: number,
+): Promise<ResumeHistoryDetail> {
+  const { data } = await api.get<ResumeHistoryDetail>(`/resume/history/${id}`);
+  return data;
+}
+
+/** DELETE /resume/history/{id} — removes one past analysis permanently. */
+export async function deleteResumeHistoryEntry(id: number): Promise<void> {
+  await api.delete(`/resume/history/${id}`);
 }

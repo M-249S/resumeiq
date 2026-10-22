@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class ResumeAnalysis(BaseModel):
@@ -28,3 +31,32 @@ class ResumeUploadResponse(BaseModel):
     filename: str
     pages: int
     analysis: ResumeAnalysis
+
+
+class ResumeHistoryItem(BaseModel):
+    """
+    Lightweight summary row for the history list. The full `analysis`
+    payload is deliberately left out here so listing many records stays
+    cheap — fetch /resume/history/{id} for the complete breakdown.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    filename: str
+    score: int
+    match_score: int
+    created_at: datetime
+
+
+class ResumeHistoryDetail(BaseModel):
+    """Single past analysis, including the full stored `analysis` JSON."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    filename: str
+    score: int
+    match_score: int
+    analysis: ResumeAnalysis
+    created_at: datetime

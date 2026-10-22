@@ -131,21 +131,40 @@ memory from the analysis step — no re-upload needed:
   answer the user can't touch)
 - `POST /resume/cover-letter/download` — same inputs, returns a `.docx`
 
+## History view
+
+A protected `/history` page lists every past analysis for the signed-in
+user (filename, overall + match score, date), newest first:
+
+- `GET /resume/history` — summary rows only, no full `analysis` payload,
+  so the list stays cheap even with many past uploads
+- `GET /resume/history/{id}` — full breakdown for one record, rendered
+  with the same `AnalysisResults` component the dashboard uses
+- `DELETE /resume/history/{id}` — removes a record permanently
+
+`AnalysisResults` takes `onDownload`/`downloading` as optional props now:
+the dashboard passes them (re-download the improved PDF from the file
+still in memory), history doesn't (the original uploaded file isn't kept
+server-side, only the stored analysis), and the button simply isn't
+rendered when they're omitted.
+
 ## Status
 
-Covers: landing page, `/login`, `/signup`, and a protected `/dashboard`
-with the full flow — upload → analyze → results → download improved
-resume → generate/edit/download cover letter — wired to the FastAPI
-backend's actual contract throughout. Verified: `tsc -b` passes with zero
-errors, `npm run build` succeeds, `oxlint` reports zero warnings, and
-every page/state has been checked visually (including result and
-cover-letter states, using temporarily injected fixture data that was
-removed before this was packaged — not left in the shipped code).
+Covers: landing page, `/login`, `/signup`, a protected `/dashboard` with
+the full flow — upload → analyze → results → download improved resume →
+generate/edit/download cover letter — and a protected `/history` page,
+all wired to the FastAPI backend's actual contract. `Navbar` is
+auth-aware: it shows Features/How it works/Pricing + Log in/Get started
+when logged out, and the user's name + History link + Log out (with the
+landing-only anchor links hidden) when logged in — used as-is on `/`,
+`/dashboard`, and `/history`. Verified: `tsc -b` passes with zero errors,
+`npm run build` succeeds, `oxlint` reports zero warnings, and every
+page/state has been checked, using temporarily injected fixture data
+that was removed before this was packaged — not left in the shipped
+code.
 
 ## What's next
 
-- Make `Navbar` auth-aware (it currently always shows "Log in / Get
-  started", even on `/dashboard` where the user is already logged in)
 - Consider httpOnly cookie-based auth instead of `localStorage`
-- A resume/cover-letter history view, backed by the `ResumeAnalysis`
-  rows the backend already persists per user
+- Pagination on `/resume/history` once a user has enough records that
+  the default page size (20) starts to matter

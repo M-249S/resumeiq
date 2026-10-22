@@ -4,8 +4,6 @@ import { Navbar } from "@/components/landing/Navbar";
 import { UploadPanel } from "@/components/dashboard/UploadPanel";
 import { AnalysisResults } from "@/components/dashboard/AnalysisResults";
 import { CoverLetterPanel } from "@/components/dashboard/CoverLetterPanel";
-import { Button } from "@/components/ui/Button";
-import { useAuth } from "@/hooks/useAuth";
 import { uploadResume, downloadImprovedResume, saveBlobAsFile } from "@/services/resume";
 import type { ResumeAnalysis } from "@/types/resume";
 
@@ -21,7 +19,6 @@ function friendlyErrorMessage(err: unknown): string {
 }
 
 export function Dashboard() {
-  const { user, logout } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
@@ -61,21 +58,13 @@ export function Dashboard() {
     <div className="min-h-screen bg-paper">
       <Navbar />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-medium text-ink">
-              Analyze your resume
-            </h1>
-            <p className="mt-1 text-ink-muted">
-              Upload a PDF and, optionally, a job description to score your match.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {user && <span className="text-sm text-ink-faint">{user.full_name}</span>}
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Log out
-            </Button>
-          </div>
+        <div className="mb-8">
+          <h1 className="font-display text-2xl font-medium text-ink">
+            Analyze your resume
+          </h1>
+          <p className="mt-1 text-ink-muted">
+            Upload a PDF and, optionally, a job description to score your match.
+          </p>
         </div>
 
         <UploadPanel onSubmit={handleAnalyze} loading={analyzing} error={error} />

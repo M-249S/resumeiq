@@ -2,6 +2,7 @@ from io import BytesIO
 from sqlalchemy.orm import Session
 
 from fastapi import Depends
+from fastapi import Query
 from fastapi import Request
 
 from app.core.limiter import limiter
@@ -12,10 +13,14 @@ from app.auth.dependencies import get_current_user
 from app.models.user import User
 from app.resume.models import ResumeAnalysis
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pypdf import PdfReader
 
-from app.schemas.resume import ResumeUploadResponse
+from app.schemas.resume import (
+    ResumeHistoryDetail,
+    ResumeHistoryItem,
+    ResumeUploadResponse,
+)
 from app.schemas.cover_letter import CoverLetterResponse
 
 from app.services.ai_service import analyze_resume
@@ -239,3 +244,91 @@ async def download_cover_letter(
                 'attachment; filename="Cover_Letter.docx"',
         },
     )
+
+
+@router.get(
+    "/resume/history",
+    response_model=list[ResumeHistoryItem],
+    tags=["Resume"],
+)
+def list_resume_history(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Past resume analyses for the signed-in user, newest first. Not
+    AI-backed (it's a plain DB read), so it isn't rate-limited like the
+    endpoints above.
+    """
+
+    history = (
+        db.query(ResumeAnalysis)
+        .filter(ResumeAnalysis.user_id == current_user.id)
+        .order_by(ResumeAnalysis.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return history
+
+
+@router.get(
+    "/resume/history/{analysis_id}",
+    response_model=ResumeHistoryDetail,
+    tags=["Resume"],
+)
+def get_resume_history_detail(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = (
+        db.query(ResumeAnalysis)
+        .filter(
+            ResumeAnalysis.id == analysis_id,
+            ResumeAnalysis.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if record is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume analysis not found.",
+        )
+
+    return record
+
+
+@router.delete(
+    "/resume/history/{analysis_id}",
+    status_code=204,
+    tags=["Resume"],
+)
+def delete_resume_history(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    record = (
+        db.query(ResumeAnalysis)
+        .filter(
+            ResumeAnalysis.id == analysis_id,
+            ResumeAnalysis.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if record is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume analysis not found.",
+        )
+
+    db.delete(record)
+    db.commit()
+
+    return Response(status_code=204)

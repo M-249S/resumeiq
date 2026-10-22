@@ -30,3 +30,22 @@ export interface ResumeUploadResponse {
 export interface CoverLetterResponse {
   cover_letter: string;
 }
+
+/** Summary row from GET /resume/history — no full analysis payload. */
+export interface ResumeHistoryItem {
+  id: number;
+  filename: string;
+  score: number;
+  match_score: number;
+  created_at: string;
+}
+
+/** Full record from GET /resume/history/{id}. */
+export interface ResumeHistoryDetail {
+  id: number;
+  filename: string;
+  score: number;
+  match_score: number;
+  analysis: ResumeAnalysis;
+  created_at: string;
+}

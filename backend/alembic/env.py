@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from app.db.session import _normalize_database_url
 from app.models.base import Base
 from app.models.user import User
 from app.resume.models import ResumeAnalysis
@@ -24,11 +25,13 @@ if config.config_file_name is not None:
 
 # Override the (blank) sqlalchemy.url from alembic.ini with the
 # DATABASE_URL environment variable, so migrations always use the same
-# database as the running app.
+# database as the running app. Normalized the same way app/db/session.py
+# normalizes it, so a bare `postgresql://` URL from a host like Render
+# still resolves to the psycopg 3 driver this project actually installs.
 database_url = os.getenv("DATABASE_URL")
 
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", _normalize_database_url(database_url))
 
 # add your model's MetaData object here
 # for 'autogenerate' support

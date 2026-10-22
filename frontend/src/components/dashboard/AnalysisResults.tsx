@@ -7,14 +7,17 @@ import type { ResumeAnalysis } from "@/types/resume";
 
 interface AnalysisResultsProps {
   analysis: ResumeAnalysis;
-  onDownload: () => void;
-  downloading: boolean;
+  // Omitted when viewing a past analysis from history, where the
+  // original uploaded file (needed to regenerate the improved PDF)
+  // is no longer available — only the stored analysis is.
+  onDownload?: () => void;
+  downloading?: boolean;
 }
 
 export function AnalysisResults({
   analysis,
   onDownload,
-  downloading,
+  downloading = false,
 }: AnalysisResultsProps) {
   const subScores: Array<[string, number]> = [
     ["Formatting", analysis.formatting_score],
@@ -108,13 +111,15 @@ export function AnalysisResults({
         </ul>
       </Card>
 
-      <Button
-        onClick={onDownload}
-        loading={downloading}
-        icon={<Download className="h-4 w-4" />}
-      >
-        Download improved resume
-      </Button>
+      {onDownload && (
+        <Button
+          onClick={onDownload}
+          loading={downloading}
+          icon={<Download className="h-4 w-4" />}
+        >
+          Download improved resume
+        </Button>
+      )}
     </div>
   );
 }
