@@ -1,0 +1,45 @@
+﻿# Dependabot opens pull requests when newer versions of dependencies are
+# released. Your CI (lint, tests, Bandit, Gitleaks, Trivy, Docker build)
+# runs on each PR branch, so a green PR is safe to merge.
+version: 2
+
+updates:
+  # Backend Python dependencies (backend/requirements.txt, fully pinned)
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      backend-minor-and-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "backend"]
+
+  # Frontend npm dependencies (frontend/package.json)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-and-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "frontend"]
+
+  # Base image in backend/Dockerfile (python:3.12-slim)
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "docker"]
+
+  # GitHub Actions versions used in .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "ci"]
