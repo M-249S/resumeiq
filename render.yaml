@@ -43,8 +43,11 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      # Free model verified end-to-end for cover letters. Change it here (not in
+      # the dashboard) — Blueprint sync overwrites dashboard edits to keys
+      # that have a value in this file.
       - key: OPENROUTER_MODEL
-        value: google/gemini-2.5-flash
+        value: recursive/flint-v1.0:free
 
 databases:
   - name: resumeiq-db
