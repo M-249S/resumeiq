@@ -2,7 +2,7 @@
 from dotenv import load_dotenv
 
 from app.services.ai_client import generate
-from app.utils.markdown_utils import clean_markdown
+from app.utils.markdown_utils import clean_markdown, strip_inline_markdown
 
 load_dotenv()
 
@@ -26,7 +26,8 @@ Requirements:
 - Explain why the candidate fits the role.
 - End with a professional closing.
 
-Return ONLY the cover letter in Markdown.
+Return ONLY the cover letter as plain text. Do NOT use Markdown formatting
+(no asterisks, no bold, no headings).
 
 Resume:
 
@@ -48,4 +49,4 @@ Job Description:
     if text.endswith("```"):
         text = text[:-3]
 
-    return clean_markdown(text)
+    return strip_inline_markdown(clean_markdown(text))
