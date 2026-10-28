@@ -24,6 +24,7 @@ updates:
       # passlib 1.7.4 is incompatible with bcrypt >= 4.1 (breaks password
       # hashing), so bcrypt stays pinned until passlib is replaced.
       - dependency-name: "bcrypt"
+      - dependency-name: "tenacity"   # pinned by google-genai (<9.2.0); revisit when it relaxes 
     labels: ["dependencies", "backend"]
 
   # Frontend npm dependencies (frontend/package.json)
