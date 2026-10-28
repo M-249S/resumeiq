@@ -4,7 +4,7 @@
 version: 2
 
 updates:
-  # Backend Python dependencies (backend/requirements.txt, fully pinned)
+  # Backend Python dependencies (backend/requirements*.txt, fully pinned)
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
@@ -12,8 +12,18 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     groups:
+      # flake8 pins an exact pyflakes/pycodestyle range per release (e.g.
+      # flake8 7.4.1 needs pyflakes>=4.0.0,<4.1.0), so they must move
+      # together or pip fails with ResolutionImpossible. Listed first so
+      # these packages land here instead of the catch-all group below.
+      lint-tools:
+        patterns: ["flake8", "pyflakes", "pycodestyle", "mccabe"]
       backend-minor-and-patch:
         update-types: ["minor", "patch"]
+    ignore:
+      # passlib 1.7.4 is incompatible with bcrypt >= 4.1 (breaks password
+      # hashing), so bcrypt stays pinned until passlib is replaced.
+      - dependency-name: "bcrypt"
     labels: ["dependencies", "backend"]
 
   # Frontend npm dependencies (frontend/package.json)
