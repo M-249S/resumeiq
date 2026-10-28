@@ -98,9 +98,10 @@ def analyze_resume(
                 job_description=job_description,
             )
 
-        except Exception:
-
-            pass
+        except Exception as exc:
+            logger.warning(
+                "OpenRouter analysis failed, falling back to mock: %s", exc
+            )
 
     # -------------------------
     # Mock
