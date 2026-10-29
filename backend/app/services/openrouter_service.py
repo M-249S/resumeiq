@@ -1,34 +1,17 @@
 import json
-import os
+import logging
 
 from dotenv import load_dotenv
-from openai import OpenAI
+
+from app.services.ai_client import generate
 
 load_dotenv()
 
-MODEL = os.getenv(
-    "OPENROUTER_MODEL",
-    "google/gemma-4-26b-a4b-it:free",
-).strip()
+logger = logging.getLogger(__name__)
 
-_client = None
-
-
-def _get_client() -> OpenAI:
-    global _client
-
-    if _client is None:
-        api_key = os.getenv("OPENROUTER_API_KEY")
-
-        if not api_key:
-            raise RuntimeError("OPENROUTER_API_KEY is not set.")
-
-        _client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key.strip(),
-        )
-
-    return _client
+# The model sometimes returns malformed JSON on long inputs; one more
+# attempt usually fixes it.
+JSON_ATTEMPTS = 2
 
 
 def analyze_resume(
@@ -73,29 +56,30 @@ Return this exact schema:
 }}
 """
 
-    response = _get_client().chat.completions.create(
-        model=MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
-        temperature=0.3,
-        timeout=120,
-    )
+    last_error = None
 
-    text = response.choices[0].message.content.strip()
+    for attempt in range(1, JSON_ATTEMPTS + 1):
+        text = generate(prompt, temperature=0.3, timeout=120).strip()
 
-    if text.startswith("```json"):
-        text = text[7:]
+        if text.startswith("```json"):
+            text = text[7:]
 
-    elif text.startswith("```"):
-        text = text[3:]
+        elif text.startswith("```"):
+            text = text[3:]
 
-    if text.endswith("```"):
-        text = text[:-3]
+        if text.endswith("```"):
+            text = text[:-3]
 
-    text = text.strip()
+        try:
+            return json.loads(text.strip())
 
-    return json.loads(text)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+            logger.warning(
+                "OpenRouter returned invalid JSON (attempt %d/%d): %s",
+                attempt,
+                JSON_ATTEMPTS,
+                exc,
+            )
+
+    raise last_error

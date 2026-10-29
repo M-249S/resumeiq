@@ -24,6 +24,7 @@ from app.schemas.resume import (
 from app.schemas.cover_letter import CoverLetterResponse
 
 from app.services.ai_service import analyze_resume
+from app.services.ai_client import AIUnavailableError
 from app.services.cover_letter_service import generate_cover_letter
 from app.services.gemini_service import rewrite_resume
 from app.services.pdf_service import generate_resume_pdf
@@ -192,10 +193,22 @@ async def cover_letter(
 
     resume_text, _ = extract_text_from_pdf(pdf_bytes)
 
-    letter = generate_cover_letter(
-        resume_text=resume_text,
-        job_description=job_description,
-    )
+    try:
+        letter = generate_cover_letter(
+            resume_text=resume_text,
+            job_description=job_description,
+        )
+
+    except AIUnavailableError:
+        # Clean 503 (with CORS headers) instead of an unhandled 500, so
+        # the frontend can show a friendly "try again" message.
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The AI service is busy right now. "
+                "Please try again in a minute."
+            ),
+        )
 
     return {
         "cover_letter": letter,
