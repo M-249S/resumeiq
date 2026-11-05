@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { GoogleSignInButton } from "@/components/ui/GoogleSignInButton";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,6 +31,18 @@ export function Login() {
     }
   }
 
+  async function handleGoogle(credential: string) {
+    setError("");
+    try {
+      await loginWithGoogle(credential);
+      navigate("/dashboard");
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(message ?? "Google sign-in failed. Please try again.");
+    }
+  }
+
   return (
     <AuthLayout
       title="Log in"
@@ -43,6 +56,8 @@ export function Login() {
         </>
       }
     >
+        <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"

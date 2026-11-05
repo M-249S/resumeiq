@@ -52,12 +52,12 @@ passlib==1.7.4
 pillow==13.0.0
 psycopg==3.3.6
 psycopg-binary==3.3.6
-pyasn1==0.6.4
+pyasn1==0.6.5
 pyasn1_modules==0.4.2
 pycparser==3.12
 pydantic==2.14.1
 pydantic_core==2.50.1
-pypdf==6.21.2
+pypdf==6.21.4
 python-docx==1.2.0
 python-dotenv==1.2.4
 python-jose==3.5.0

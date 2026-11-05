@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { AuthContext } from "@/context/AuthContext";
-import { loginUser, registerUser, getCurrentUser } from "@/services/auth";
+import {
+  loginUser,
+  loginWithGoogleCredential,
+  registerUser,
+  getCurrentUser,
+} from "@/services/auth";
 import type { User, RegisterPayload } from "@/types/auth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -36,6 +41,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentUser);
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const tokens = await loginWithGoogleCredential(credential);
+    localStorage.setItem("access_token", tokens.access_token);
+    localStorage.setItem("refresh_token", tokens.refresh_token);
+
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
   const register = useCallback(
     async (payload: RegisterPayload) => {
       await registerUser(payload);
@@ -54,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAuthenticated: Boolean(user), login, register, logout }}
+      value={{ user, loading, isAuthenticated: Boolean(user), login, loginWithGoogle, register, logout }}
     >
       {children}
     </AuthContext.Provider>
