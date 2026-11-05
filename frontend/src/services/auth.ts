@@ -27,3 +27,9 @@ export async function getCurrentUser(): Promise<User> {
   const response = await api.get<User>("/auth/me");
   return response.data;
 }
+
+/** Exchanges a Google ID token (from Google Identity Services) for our own JWTs. */
+export async function loginWithGoogleCredential(credential: string): Promise<TokenResponse> {
+  const response = await api.post<TokenResponse>("/auth/google", { credential });
+  return response.data;
+}

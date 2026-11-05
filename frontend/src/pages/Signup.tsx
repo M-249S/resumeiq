@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { GoogleSignInButton } from "@/components/ui/GoogleSignInButton";
+import { PasswordStrength } from "@/components/ui/PasswordStrength";
 import { useAuth } from "@/hooks/useAuth";
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export function Signup() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,6 +46,18 @@ export function Signup() {
     }
   }
 
+  async function handleGoogle(credential: string) {
+    setError("");
+    try {
+      await loginWithGoogle(credential);
+      navigate("/dashboard");
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(message ?? "Google sign-in failed. Please try again.");
+    }
+  }
+
   return (
     <AuthLayout
       title="Create your account"
@@ -57,6 +71,8 @@ export function Signup() {
         </>
       }
     >
+        <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Full name"
@@ -81,6 +97,7 @@ export function Signup() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <PasswordStrength password={password} />
         <Input
           type="password"
           label="Confirm password"
@@ -88,6 +105,11 @@ export function Signup() {
           required
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          error={
+            confirmPassword && password !== confirmPassword
+              ? "Passwords don't match."
+              : undefined
+          }
         />
 
         {error && <p className="text-sm text-danger">{error}</p>}

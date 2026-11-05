@@ -39,6 +39,14 @@ class User(Base):
         nullable=False,
     )
 
+    # Google account id ("sub" claim). NULL for password-only accounts.
+    google_sub: Mapped[str | None] = mapped_column(
+        String(64),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
+
     is_active: Mapped[bool] = mapped_column(
         default=True,
     )

@@ -12,12 +12,15 @@ from app.auth.dependencies import get_current_user
 from app.models.user import User
 
 from app.auth.schemas import (
+    GoogleLogin,
     UserRegister,
     UserResponse,
     TokenResponse,
 )
 
 from app.auth.service import (
+    GoogleNotConfiguredError,
+    login_with_google,
     register_user,
     login_user,
 )
@@ -60,6 +63,30 @@ def login(
             db=db,
             email=form_data.username,
             password=form_data.password,
+        )
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=401,
+            detail=str(e),
+        )
+
+
+@router.post(
+    "/google",
+    response_model=TokenResponse,
+)
+def google_login(
+    body: GoogleLogin,
+    db: Session = Depends(get_db),
+):
+    try:
+        return login_with_google(db, body.credential)
+
+    except GoogleNotConfiguredError:
+        raise HTTPException(
+            status_code=503,
+            detail="Google sign-in is not available right now.",
         )
 
     except ValueError as e:
