@@ -1,22 +1,13 @@
-import { useState } from "react";
-import { isAxiosError } from "axios";
+import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { UploadPanel } from "@/components/dashboard/UploadPanel";
 import { AnalysisResults } from "@/components/dashboard/AnalysisResults";
 import { CoverLetterPanel } from "@/components/dashboard/CoverLetterPanel";
+import { AnalysisSkeleton } from "@/components/dashboard/AnalysisSkeleton";
+import { useToast } from "@/hooks/useToast";
+import { friendlyErrorMessage } from "@/lib/errors";
 import { uploadResume, downloadImprovedResume, saveBlobAsFile } from "@/services/resume";
 import type { ResumeAnalysis } from "@/types/resume";
-
-function friendlyErrorMessage(err: unknown): string {
-  if (isAxiosError(err)) {
-    if (err.response?.status === 429) {
-      return "You've hit the analysis limit for now — please wait a minute and try again.";
-    }
-    const detail = err.response?.data?.detail;
-    if (typeof detail === "string") return detail;
-  }
-  return "Something went wrong while analyzing your resume. Please try again.";
-}
 
 export function Dashboard() {
   const [file, setFile] = useState<File | null>(null);
@@ -25,6 +16,16 @@ export function Dashboard() {
   const [analyzing, setAnalyzing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Bring the skeleton / results into view: on small screens they start
+  // below the fold, so without this the click appears to do nothing.
+  useEffect(() => {
+    if (analyzing || analysis) {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [analyzing, analysis]);
 
   async function handleAnalyze(selectedFile: File, description: string) {
     setError("");
@@ -35,7 +36,12 @@ export function Dashboard() {
       setJobDescription(description);
       setAnalysis(result.analysis);
     } catch (err) {
-      setError(friendlyErrorMessage(err));
+      setError(
+        friendlyErrorMessage(
+          err,
+          "Something went wrong while analyzing your resume. Please try again.",
+        ),
+      );
     } finally {
       setAnalyzing(false);
     }
@@ -48,7 +54,7 @@ export function Dashboard() {
       const blob = await downloadImprovedResume(file);
       saveBlobAsFile(blob, "improved-resume.pdf");
     } catch (err) {
-      setError(friendlyErrorMessage(err));
+      toast.show(friendlyErrorMessage(err, "Couldn't download the improved resume. Please try again."));
     } finally {
       setDownloading(false);
     }
@@ -69,7 +75,14 @@ export function Dashboard() {
 
         <UploadPanel onSubmit={handleAnalyze} loading={analyzing} error={error} />
 
-        {analysis && (
+        <div ref={resultsRef} className="scroll-mt-24">
+        {analyzing && (
+          <div className="mt-8">
+            <AnalysisSkeleton />
+          </div>
+        )}
+
+        {!analyzing && analysis && (
           <div className="mt-8 space-y-8">
             <AnalysisResults
               analysis={analysis}
@@ -78,14 +91,11 @@ export function Dashboard() {
             />
 
             {file && (
-              <CoverLetterPanel
-                file={file}
-                jobDescription={jobDescription}
-                onError={setError}
-              />
+              <CoverLetterPanel file={file} jobDescription={jobDescription} />
             )}
           </div>
         )}
+        </div>
       </main>
     </div>
   );

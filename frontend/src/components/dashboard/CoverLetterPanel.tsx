@@ -7,18 +7,16 @@ import {
   downloadCoverLetterDocx,
   saveBlobAsFile,
 } from "@/services/resume";
+import { useToast } from "@/hooks/useToast";
+import { friendlyErrorMessage } from "@/lib/errors";
 
 interface CoverLetterPanelProps {
   file: File;
   jobDescription: string;
-  onError: (message: string) => void;
 }
 
-export function CoverLetterPanel({
-  file,
-  jobDescription,
-  onError,
-}: CoverLetterPanelProps) {
+export function CoverLetterPanel({ file, jobDescription }: CoverLetterPanelProps) {
+  const toast = useToast();
   const [letter, setLetter] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -28,8 +26,10 @@ export function CoverLetterPanel({
     try {
       const text = await generateCoverLetter(file, jobDescription);
       setLetter(text);
-    } catch {
-      onError("Couldn't generate a cover letter right now. Please try again.");
+    } catch (err) {
+      toast.show(
+        friendlyErrorMessage(err, "Couldn't generate a cover letter right now. Please try again."),
+      );
     } finally {
       setGenerating(false);
     }
@@ -40,8 +40,10 @@ export function CoverLetterPanel({
     try {
       const blob = await downloadCoverLetterDocx(file, jobDescription);
       saveBlobAsFile(blob, "cover-letter.docx");
-    } catch {
-      onError("Couldn't download the cover letter. Please try again.");
+    } catch (err) {
+      toast.show(
+        friendlyErrorMessage(err, "Couldn't download the cover letter. Please try again."),
+      );
     } finally {
       setDownloading(false);
     }
@@ -60,8 +62,15 @@ export function CoverLetterPanel({
             value={letter}
             onChange={(e) => setLetter(e.target.value)}
             rows={12}
-            className="w-full rounded-md border border-border-strong bg-paper px-3.5 py-2.5 text-sm leading-relaxed text-ink focus:border-ink focus:outline-none focus:ring-2 focus:ring-accent/20"
+            disabled={generating}
+            aria-busy={generating}
+            className="w-full disabled:opacity-60 rounded-md border border-border-strong bg-paper px-3.5 py-2.5 text-sm leading-relaxed text-ink focus:border-ink focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
+          {generating && (
+            <p role="status" className="text-sm text-ink-muted">
+              Writing a new version…
+            </p>
+          )}
           <div className="flex flex-wrap gap-3">
             <Button
               variant="secondary"
@@ -88,6 +97,11 @@ export function CoverLetterPanel({
           <Button onClick={handleGenerate} loading={generating}>
             Generate cover letter
           </Button>
+          {generating && (
+            <p role="status" className="mt-3 text-sm text-ink-muted">
+              Writing your cover letter…
+            </p>
+          )}
         </div>
       )}
     </Card>

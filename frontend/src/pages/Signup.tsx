@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { GoogleSignInButton } from "@/components/ui/GoogleSignInButton";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
 import { useAuth } from "@/hooks/useAuth";
+import { friendlyErrorMessage } from "@/lib/errors";
 
 const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+type FieldErrors = Partial<
+  Record<"fullName" | "email" | "password" | "confirmPassword", string>
+>;
 
 export function Signup() {
   const navigate = useNavigate();
@@ -18,29 +24,33 @@ export function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
+    // Own validation instead of the browser's default bubbles, so the
+    // messages match the rest of the UI.
+    const errors: FieldErrors = {};
+    if (!fullName.trim()) errors.fullName = "Enter your full name.";
+    if (!email.trim()) errors.email = "Enter your email.";
+    else if (!EMAIL_PATTERN.test(email.trim())) errors.email = "Enter a valid email address.";
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
-      return;
+      errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
     }
-    if (password !== confirmPassword) {
-      setError("Passwords don't match.");
-      return;
-    }
+    if (!confirmPassword) errors.confirmPassword = "Confirm your password.";
+    else if (password !== confirmPassword) errors.confirmPassword = "Passwords don't match.";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
     try {
       await register({ full_name: fullName, email, password });
       navigate("/dashboard");
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      setError(message ?? "Something went wrong. Please try again.");
+      setError(friendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -52,9 +62,7 @@ export function Signup() {
       await loginWithGoogle(credential);
       navigate("/dashboard");
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      setError(message ?? "Google sign-in failed. Please try again.");
+      setError(friendlyErrorMessage(err, "Google sign-in failed. Please try again."));
     }
   }
 
@@ -73,13 +81,17 @@ export function Signup() {
     >
         <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Input
           label="Full name"
           autoComplete="name"
           required
           value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
+          error={fieldErrors.fullName}
+          onChange={(e) => {
+            setFullName(e.target.value);
+            setFieldErrors((f) => ({ ...f, fullName: undefined }));
+          }}
         />
         <Input
           type="email"
@@ -87,7 +99,11 @@ export function Signup() {
           autoComplete="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          error={fieldErrors.email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setFieldErrors((f) => ({ ...f, email: undefined }));
+          }}
         />
         <Input
           type="password"
@@ -95,7 +111,11 @@ export function Signup() {
           autoComplete="new-password"
           required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          error={fieldErrors.password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setFieldErrors((f) => ({ ...f, password: undefined }));
+          }}
         />
         <PasswordStrength password={password} />
         <Input
@@ -104,15 +124,23 @@ export function Signup() {
           autoComplete="new-password"
           required
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setFieldErrors((f) => ({ ...f, confirmPassword: undefined }));
+          }}
           error={
-            confirmPassword && password !== confirmPassword
+            fieldErrors.confirmPassword ??
+            (confirmPassword && password !== confirmPassword
               ? "Passwords don't match."
-              : undefined
+              : undefined)
           }
         />
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
 
         <Button type="submit" loading={loading} className="w-full">
           Create account

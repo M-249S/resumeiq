@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { isAxiosError } from "axios";
 import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/hooks/useToast";
+import { friendlyErrorMessage } from "@/lib/errors";
 import { AnalysisResults } from "@/components/dashboard/AnalysisResults";
 import {
   getResumeHistory,
@@ -12,14 +14,6 @@ import {
   deleteResumeHistoryEntry,
 } from "@/services/resume";
 import type { ResumeHistoryItem, ResumeHistoryDetail } from "@/types/resume";
-
-function friendlyErrorMessage(err: unknown): string {
-  if (isAxiosError(err)) {
-    const detail = err.response?.data?.detail;
-    if (typeof detail === "string") return detail;
-  }
-  return "Something went wrong. Please try again.";
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -35,8 +29,10 @@ export function History() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const toast = useToast();
 
   const loadHistory = useCallback(async () => {
+    setError("");
     try {
       const data = await getResumeHistory();
       setItems(data);
@@ -55,27 +51,26 @@ export function History() {
   }, [loadHistory]);
 
   async function handleOpen(id: number) {
-    setError("");
     setLoadingDetail(true);
     try {
       const detail = await getResumeHistoryDetail(id);
       setSelected(detail);
     } catch (err) {
-      setError(friendlyErrorMessage(err));
+      toast.show(friendlyErrorMessage(err));
     } finally {
       setLoadingDetail(false);
     }
   }
 
   async function handleDelete(id: number) {
-    setError("");
     setDeletingId(id);
     try {
       await deleteResumeHistoryEntry(id);
       setItems((prev) => prev?.filter((item) => item.id !== id) ?? null);
       if (selected?.id === id) setSelected(null);
+      toast.show("Analysis deleted.", "success");
     } catch (err) {
-      setError(friendlyErrorMessage(err));
+      toast.show(friendlyErrorMessage(err));
     } finally {
       setDeletingId(null);
     }
@@ -119,11 +114,33 @@ export function History() {
             </div>
 
             {error && (
-              <p className="mb-4 text-sm text-danger">{error}</p>
+              <Card className="mb-4 flex flex-wrap items-center justify-between gap-3 p-5">
+                <p role="alert" className="text-sm text-danger">
+                  {error}
+                </p>
+                <Button variant="secondary" size="sm" onClick={() => void loadHistory()}>
+                  Try again
+                </Button>
+              </Card>
             )}
 
-            {items === null && (
-              <p className="text-sm text-ink-faint">Loading…</p>
+            {items === null && !error && (
+              <ul className="space-y-3" aria-busy="true" aria-label="Loading history">
+                {[0, 1, 2].map((i) => (
+                  <li key={i}>
+                    <Card className="flex items-center justify-between gap-4 p-5">
+                      <div className="flex flex-1 items-center gap-4">
+                        <Skeleton className="h-5 w-5" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-48 max-w-full" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-28 rounded-full" />
+                    </Card>
+                  </li>
+                ))}
+              </ul>
             )}
 
             {items !== null && items.length === 0 && (
