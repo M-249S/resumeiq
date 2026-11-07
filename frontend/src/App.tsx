@@ -7,6 +7,7 @@ import { Login } from "@/pages/Login";
 import { Signup } from "@/pages/Signup";
 import { Dashboard } from "@/pages/Dashboard";
 import { History } from "@/pages/History";
+import { Try } from "@/pages/Try";
 import { Privacy } from "@/pages/Privacy";
 import { Terms } from "@/pages/Terms";
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/try" element={<Try />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route

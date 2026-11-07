@@ -58,13 +58,18 @@ def _retry(func, *args, retries=3, delay=2, provider="AI", **kwargs):
 def analyze_resume(
     resume_text: str,
     job_description: str = "",
+    allow_mock: bool = True,
 ):
     """
     Provider Priority
 
     1. Gemini
     2. OpenRouter
-    3. Mock
+    3. Mock (only when allow_mock is True)
+
+    With allow_mock=False the function returns None instead of fabricated
+    results when every real provider fails, so callers that must not show
+    fake data (e.g. the public demo) can report an outage instead.
     """
 
     # -------------------------
@@ -106,6 +111,9 @@ def analyze_resume(
     # -------------------------
     # Mock
     # -------------------------
+
+    if not allow_mock:
+        return None
 
     return mock_analyze(
         resume_text=resume_text,

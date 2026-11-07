@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
 import { Card } from "@/components/ui/Card";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface AuthLayoutProps {
   title: string;
@@ -12,7 +13,8 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-12">
+      <ThemeToggle className="absolute right-4 top-4" />
       <Link to="/" className="mb-8">
         <Logo />
       </Link>

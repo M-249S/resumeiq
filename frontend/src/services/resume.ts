@@ -28,6 +28,25 @@ export async function uploadResume(
 }
 
 /**
+ * POST /resume/demo — same shape as /resume/upload but needs no account and
+ * stores nothing. Tighter server-side limits apply (size, pages, rate).
+ */
+export async function analyzeResumeDemo(
+  file: File,
+  jobDescription: string,
+): Promise<ResumeUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("job_description", jobDescription);
+
+  const { data } = await api.post<ResumeUploadResponse>(
+    "/resume/demo",
+    formData,
+  );
+  return data;
+}
+
+/**
  * POST /resume/download — same file, rewritten and returned as a PDF
  * binary stream. Requires `responseType: "blob"` or axios will try (and
  * fail) to parse the binary response as text/JSON.

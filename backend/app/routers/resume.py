@@ -24,6 +24,7 @@ from app.schemas.resume import (
 from app.schemas.cover_letter import CoverLetterResponse
 
 from app.services.ai_service import analyze_resume
+from app.services.demo_budget import demo_budget
 from app.services.ai_client import AIUnavailableError
 from app.services.cover_letter_service import generate_cover_letter
 from app.services.gemini_service import rewrite_resume
@@ -35,6 +36,16 @@ router = APIRouter()
 # paid AI provider, so they're limited to avoid runaway costs from a
 # single client hammering the API.
 AI_RATE_LIMIT = "5/minute"
+
+# Limits for the unauthenticated demo endpoint. Stricter than the account
+# limits above because anyone can call it: a tighter per-IP rate, small
+# inputs, and a global daily budget (see app/services/demo_budget.py).
+DEMO_RATE_LIMIT = "3/hour"
+DEMO_MAX_BYTES = 2 * 1024 * 1024
+DEMO_MAX_PAGES = 4
+DEMO_MAX_RESUME_CHARS = 12000
+DEMO_MAX_JOB_CHARS = 4000
+AI_BUSY_MESSAGE = "The AI service is busy right now. Please try again in a minute."
 
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
@@ -99,6 +110,77 @@ async def upload_resume(
     db.add(resume_analysis)
     db.commit()
     db.refresh(resume_analysis)
+
+    return {
+        "filename": file.filename or "resume.pdf",
+        "pages": pages,
+        "analysis": analysis,
+    }
+
+
+@router.post(
+    "/resume/demo",
+    response_model=ResumeUploadResponse,
+    tags=["Resume"],
+)
+@limiter.limit(DEMO_RATE_LIMIT)
+async def demo_resume_analysis(
+    request: Request,
+    file: UploadFile = File(...),
+    job_description: str = Form(""),
+):
+    """
+    Analyze a resume without an account. Nothing is stored, and a failed AI
+    call returns an error instead of mock data so guests never see fake
+    results presented as real.
+    """
+    if file.content_type != "application/pdf":
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are allowed.",
+        )
+
+    pdf_bytes = await file.read(DEMO_MAX_BYTES + 1)
+    if len(pdf_bytes) > DEMO_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="That file is too large for the free demo. Please use a PDF under 2MB.",
+        )
+
+    try:
+        text, pages = extract_text_from_pdf(pdf_bytes)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="We couldn't read that PDF. Please try a different file.",
+        )
+
+    if pages > DEMO_MAX_PAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"The free demo supports up to {DEMO_MAX_PAGES} pages. Create an account to analyze longer resumes.",
+        )
+
+    if not text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="We couldn't find any text in that PDF. Scanned documents aren't supported.",
+        )
+
+    if not demo_budget.try_consume():
+        raise HTTPException(
+            status_code=429,
+            detail="The free demo has reached its limit for today. Please try again tomorrow or create an account.",
+        )
+
+    analysis = analyze_resume(
+        resume_text=text[:DEMO_MAX_RESUME_CHARS],
+        job_description=job_description[:DEMO_MAX_JOB_CHARS],
+        allow_mock=False,
+    )
+    if not analysis:
+        demo_budget.refund()
+        raise HTTPException(status_code=503, detail=AI_BUSY_MESSAGE)
 
     return {
         "filename": file.filename or "resume.pdf",

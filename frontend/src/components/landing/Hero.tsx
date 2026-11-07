@@ -25,7 +25,7 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to="/signup">
+            <Link to="/try">
               <Button size="lg" icon={<ArrowRight className="h-4 w-4" />} className="w-full sm:w-auto">
                 Analyze your resume
               </Button>
@@ -38,7 +38,7 @@ export function Hero() {
           </div>
 
           <p className="mt-4 text-sm text-ink-faint">
-            Free to start. No credit card required.
+            No account needed to try it. Free, no credit card required.
           </p>
         </div>
 

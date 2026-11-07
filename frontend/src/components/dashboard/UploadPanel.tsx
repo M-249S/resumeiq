@@ -101,7 +101,11 @@ export function UploadPanel({ onSubmit, loading, error }: UploadPanelProps) {
           />
         </div>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        )}
 
         <Button type="submit" loading={loading} className="w-full sm:w-auto">
           Analyze resume

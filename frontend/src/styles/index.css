@@ -10,7 +10,7 @@
   --color-paper-raised: #ffffff;
   --color-ink: #14213d;
   --color-ink-muted: #4b5768;
-  --color-ink-faint: #8891a0;
+  --color-ink-faint: #677282;
   --color-border: #e4e1d9;
   --color-border-strong: #c9c5b8;
 
@@ -19,13 +19,63 @@
   --color-accent-soft: #e8efe9;
 
   --color-success: #2f6f4e;
-  --color-warning: #b8862f;
+  --color-warning: #8a6212;
   --color-danger: #a83b3b;
+  --color-warning-soft: #f8f0e2;
+  --color-danger-soft: #faf1f1;
 
   --font-display: "Fraunces Variable", "Georgia", serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 0.75rem;
+}
+
+/* Dark theme: same warm-paper idea, inverted. It applies when the user
+   chose "dark", or when they haven't chosen and the OS prefers dark. The
+   choice is stored in localStorage and applied by a tiny script in
+   index.html before first paint (no flash). */
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #12161c;
+  --color-paper-raised: #1a2029;
+  --color-ink: #ecebe6;
+  --color-ink-muted: #aab1bd;
+  --color-ink-faint: #818a99;
+  --color-border: #2a313b;
+  --color-border-strong: #3b4452;
+  --color-accent: #8ed1ae;
+  --color-accent-hover: #a5dcc0;
+  --color-accent-soft: #1d2b25;
+  --color-success: #62c08f;
+  --color-warning: #dba74b;
+  --color-danger: #e57f7f;
+  --color-warning-soft: #3a2f1a;
+  --color-danger-soft: #3a2326;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-paper: #12161c;
+    --color-paper-raised: #1a2029;
+    --color-ink: #ecebe6;
+    --color-ink-muted: #aab1bd;
+    --color-ink-faint: #818a99;
+    --color-border: #2a313b;
+    --color-border-strong: #3b4452;
+    --color-accent: #8ed1ae;
+    --color-accent-hover: #a5dcc0;
+    --color-accent-soft: #1d2b25;
+    --color-success: #62c08f;
+    --color-warning: #dba74b;
+    --color-danger: #e57f7f;
+    --color-warning-soft: #3a2f1a;
+    --color-danger-soft: #3a2326;
+  }
 }
 
 @layer base {

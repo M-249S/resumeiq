@@ -34,7 +34,7 @@ export function DocumentPreview() {
 
       <div className="space-y-3">
         <p className="text-xs font-medium text-ink-faint">Before</p>
-        <p className="rounded-md bg-[#faf1f1] px-3 py-2 text-sm text-ink-muted line-through decoration-danger/40">
+        <p className="rounded-md bg-danger-soft px-3 py-2 text-sm text-ink-muted line-through decoration-danger/40">
           Responsible for managing a small team
         </p>
 
