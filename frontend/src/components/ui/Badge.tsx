@@ -11,7 +11,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   neutral: "bg-paper text-ink-muted border-border",
   accent: "bg-accent-soft text-accent border-transparent",
   success: "bg-accent-soft text-success border-transparent",
-  warning: "bg-[#f8f0e2] text-warning border-transparent",
+  warning: "bg-warning-soft text-warning border-transparent",
 };
 
 export function Badge({ variant = "neutral", className, ...props }: BadgeProps) {

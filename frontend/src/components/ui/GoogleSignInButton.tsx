@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/hooks/useTheme";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 const GSI_SRC = "https://accounts.google.com/gsi/client";
@@ -51,6 +52,7 @@ interface Props {
  */
 export function GoogleSignInButton({ onCredential, onError }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
   // Keep the latest handlers without re-initialising Google's SDK on every render.
   const handlers = useRef({ onCredential, onError });
   useEffect(() => {
@@ -73,7 +75,7 @@ export function GoogleSignInButton({ onCredential, onError }: Props) {
         });
         google.accounts.id.renderButton(container, {
           type: "standard",
-          theme: "outline",
+          theme: theme === "dark" ? "filled_black" : "outline",
           size: "large",
           text: "continue_with",
           shape: "rectangular",
@@ -86,7 +88,7 @@ export function GoogleSignInButton({ onCredential, onError }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [theme]);
 
   if (!CLIENT_ID) return null;
 
