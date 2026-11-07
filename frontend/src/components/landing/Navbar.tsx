@@ -5,20 +5,20 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 
+// Absolute "/#..." so the links also work from other public pages
+// (e.g. /privacy), not only from the landing page itself.
 const links = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Features", href: "/#features" },
+  { label: "How it works", href: "/#how-it-works" },
 ];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
 
-  // The Features/How it works/Pricing anchors only exist on the landing
-  // page itself. Once logged in (e.g. viewing this Navbar from
-  // /dashboard), they'd just be dead links, so they're hidden rather
-  // than shown broken.
+  // The Features/How it works anchors live on the landing page. Once
+  // logged in (e.g. viewing this Navbar from /dashboard) they're hidden
+  // rather than shown as links to a page the user has moved past.
   const navLinks = isAuthenticated ? [] : links;
 
   function handleLogout() {

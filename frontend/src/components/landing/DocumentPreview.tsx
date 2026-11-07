@@ -10,6 +10,9 @@ import { Card } from "@/components/ui/Card";
 export function DocumentPreview() {
   return (
     <Card className="relative w-full max-w-md p-8">
+      <span className="absolute -top-3 left-8 rounded-full border border-border bg-paper px-3 py-0.5 text-xs font-medium text-ink-muted">
+        Example
+      </span>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <div className="h-2.5 w-32 rounded-full bg-ink/80" />
