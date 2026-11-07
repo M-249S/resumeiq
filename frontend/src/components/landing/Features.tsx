@@ -17,21 +17,21 @@ const features: Feature[] = [
   },
   {
     icon: PenLine,
-    title: "Line-by-line rewrites",
+    title: "Improved resume",
     description:
-      "Weak, passive bullet points get rewritten into specific, achievement-driven language you can accept or edit.",
+      "Weak, passive bullet points are rewritten into specific, achievement-driven language, and you download the result as a PDF.",
   },
   {
     icon: Mail,
     title: "Matching cover letters",
     description:
-      "Generate a cover letter that actually reflects your resume and the role — not a generic template.",
+      "Get a cover letter drafted from your resume and the job description, not from a generic template.",
   },
   {
     icon: FileDown,
-    title: "Clean exports",
+    title: "Editable cover letter",
     description:
-      "Download a polished PDF or DOCX in an ATS-safe format, ready to submit.",
+      "Tweak the generated letter right in the page, regenerate it, and download it as a Word document (.docx).",
   },
 ];
 
