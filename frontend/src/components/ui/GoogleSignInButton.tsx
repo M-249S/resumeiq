@@ -94,7 +94,14 @@ export function GoogleSignInButton({ onCredential, onError }: Props) {
 
   return (
     <>
-      <div className="flex justify-center" ref={containerRef} style={{ minHeight: 44 }} />
+      {/* Google's button lives in an iframe with a light colour scheme. On a dark
+        page the browser paints such an iframe with an opaque white backdrop, so
+        the container is pinned to "light" to keep the iframe transparent. */}
+      <div
+        className="flex justify-center"
+        ref={containerRef}
+        style={{ minHeight: 44, colorScheme: "light" }}
+       />
       <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden>
         <span className="h-px flex-1 bg-border" />
         or
