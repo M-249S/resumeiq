@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthProvider";
+import { ToastProvider } from "@/context/ToastProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Landing } from "@/pages/Landing";
 import { Login } from "@/pages/Login";
@@ -10,6 +11,7 @@ import { History } from "@/pages/History";
 function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -31,6 +33,7 @@ function App() {
           }
         />
       </Routes>
+      </ToastProvider>
     </AuthProvider>
   );
 }

@@ -41,12 +41,14 @@ export function AnalysisResults({
             <div className="flex flex-col items-center rounded-md border border-accent-soft bg-accent-soft px-5 py-3">
               <span className="font-display text-2xl font-semibold text-accent">
                 {analysis.score}
+                <span className="text-sm font-normal text-accent/70">/100</span>
               </span>
               <span className="text-xs text-accent/80">overall</span>
             </div>
             <div className="flex flex-col items-center rounded-md border border-border px-5 py-3">
               <span className="font-display text-2xl font-semibold text-ink">
                 {analysis.match_score}
+                <span className="text-sm font-normal text-ink-faint">/100</span>
               </span>
               <span className="text-xs text-ink-faint">job match</span>
             </div>
