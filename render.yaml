@@ -1,5 +1,5 @@
-# Render Blueprint — provisions the ResumeIQ backend + its Postgres
-# database together. Deploy with: Render dashboard -> New -> Blueprint,
+# Render Blueprint — provisions the ResumeIQ backend. The database now
+# lives on Neon (see DATABASE_URL below). Deploy with: Render dashboard -> New -> Blueprint,
 # pointing at this repo. Secrets (SECRET_KEY, AI provider keys) are left
 # for you to fill in in the Render dashboard rather than committed here.
 #
@@ -21,13 +21,12 @@ services:
       - key: PORT
         value: "10000"
 
-      # Render injects its own Postgres connection string here (scheme
-      # `postgresql://`); app/db/session.py normalizes that to the
-      # `postgresql+psycopg://` dialect this project actually installs.
+      # Neon Postgres (direct, non-pooled connection string, with
+      # ?sslmode=require). Set it in the Render dashboard -- sync: false
+      # keeps the password out of this file. app/db/session.py rewrites
+      # the `postgresql://` scheme to `postgresql+psycopg://`.
       - key: DATABASE_URL
-        fromDatabase:
-          name: resumeiq-db
-          property: connectionString
+        sync: false
 
       # Generated once by Render on first deploy and kept stable across
       # redeploys — existing JWTs stay valid between deploys.
@@ -57,6 +56,8 @@ services:
       - key: OPENROUTER_MODEL
         value: recursive/flint-v1.0:free
 
+# Legacy free Postgres, no longer referenced by the service. Delete this
+# block (and the database in the dashboard) once Neon is verified.
 databases:
   - name: resumeiq-db
     plan: free
