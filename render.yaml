@@ -55,11 +55,3 @@ services:
       # that have a value in this file.
       - key: OPENROUTER_MODEL
         value: recursive/flint-v1.0:free
-
-# Legacy free Postgres, no longer referenced by the service. Delete this
-# block (and the database in the dashboard) once Neon is verified.
-databases:
-  - name: resumeiq-db
-    plan: free
-    databaseName: resumeiq
-    user: resumeiq
