@@ -23,7 +23,9 @@ interface AnalysisResultsProps {
 function isMissingJobDescription(analysis: ResumeAnalysis): boolean {
   return (
     analysis.match_score === 0 &&
-    /n\/a|no job description/i.test(`${analysis.ats_level} ${analysis.summary}`)
+    /n\/a|\b(no|without|not)\b[^.]{0,20}job description/i.test(
+      `${analysis.ats_level} ${analysis.summary}`,
+    )
   );
 }
 
@@ -42,6 +44,13 @@ export function AnalysisResults({
   ];
 
   const hasJobMatch = !isMissingJobDescription(analysis);
+  // Keep the model's own level (e.g. "Insufficient Data") unless it is just
+  // an "N/A" placeholder for the missing job description.
+  const badgeLabel = /n\/a/i.test(analysis.ats_level)
+    ? "No job description"
+    : analysis.ats_level;
+  // Match the ring: green only when the overall score is healthy.
+  const badgeVariant = analysis.score >= 60 ? "accent" : "warning";
 
   return (
     <div className="space-y-6">
@@ -55,9 +64,7 @@ export function AnalysisResults({
           </div>
 
           <div className="min-w-0">
-            <Badge variant={hasJobMatch ? "accent" : "neutral"}>
-              {hasJobMatch ? analysis.ats_level : "No job description"}
-            </Badge>
+            <Badge variant={badgeVariant}>{badgeLabel}</Badge>
             <p className="mt-3 max-w-xl text-ink-muted">{analysis.summary}</p>
             {!hasJobMatch && (
               <p className="mt-2 text-sm text-ink-faint">
