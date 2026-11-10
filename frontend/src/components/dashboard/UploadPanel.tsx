@@ -7,15 +7,15 @@ interface UploadPanelProps {
   onSubmit: (file: File, jobDescription: string) => void;
   loading: boolean;
   error: string;
-  /** Shown in the dropzone hint; the demo page passes a smaller limit. */
-  maxSizeLabel?: string;
+  /** Largest PDF accepted, in MB. The demo page passes a smaller limit. */
+  maxSizeMb?: number;
 }
 
 export function UploadPanel({
   onSubmit,
   loading,
   error,
-  maxSizeLabel = "5MB",
+  maxSizeMb = 5,
 }: UploadPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -29,6 +29,11 @@ export function UploadPanel({
     }
     if (selected.type !== "application/pdf") {
       setFileError("Only PDF files are allowed.");
+      setFile(null);
+      return;
+    }
+    if (selected.size > maxSizeMb * 1024 * 1024) {
+      setFileError(`That file is too large. Please use a PDF under ${maxSizeMb}MB.`);
       setFile(null);
       return;
     }
@@ -75,7 +80,7 @@ export function UploadPanel({
               className="flex w-full flex-col items-center gap-2 rounded-md border border-dashed border-border-strong bg-paper px-4 py-8 text-ink-muted transition-colors hover:border-ink hover:text-ink"
             >
               <UploadCloud className="h-6 w-6" />
-              <span className="text-sm">Click to choose a PDF, up to {maxSizeLabel}</span>
+              <span className="text-sm">Click to choose a PDF, up to {maxSizeMb}MB</span>
             </button>
           )}
 

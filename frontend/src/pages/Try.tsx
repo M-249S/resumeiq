@@ -79,7 +79,7 @@ export function Try() {
           onSubmit={handleAnalyze}
           loading={analyzing}
           error={error}
-          maxSizeLabel="2MB"
+          maxSizeMb={2}
         />
 
         <p className="mt-3 text-xs text-ink-faint">
