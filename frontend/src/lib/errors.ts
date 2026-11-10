@@ -17,10 +17,14 @@ export function friendlyErrorMessage(
     if (err.response.status === 429) {
       return "You've hit the limit for now. Please wait a minute and try again.";
     }
-    if (err.response.status === 413) {
-      return "That file is too large. Please use a PDF under 5MB.";
-    }
     const detail = err.response.data?.detail;
+    if (err.response.status === 413) {
+      // The demo endpoint has a smaller limit than the signed-in one, so
+      // prefer the server's own message over a hard-coded size.
+      return typeof detail === "string"
+        ? detail
+        : "That file is too large. Please use a smaller PDF.";
+    }
     if (typeof detail === "string") return detail;
   }
   return fallback;

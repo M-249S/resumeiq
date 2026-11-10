@@ -75,7 +75,12 @@ export function Try() {
           </p>
         </div>
 
-        <UploadPanel onSubmit={handleAnalyze} loading={analyzing} error={error} />
+        <UploadPanel
+          onSubmit={handleAnalyze}
+          loading={analyzing}
+          error={error}
+          maxSizeLabel="2MB"
+        />
 
         <p className="mt-3 text-xs text-ink-faint">
           Free demo limits: one PDF up to 2MB and 4 pages, a few analyses per hour.{" "}
