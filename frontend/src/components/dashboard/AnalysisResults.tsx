@@ -23,7 +23,7 @@ interface AnalysisResultsProps {
 function isMissingJobDescription(analysis: ResumeAnalysis): boolean {
   return (
     analysis.match_score === 0 &&
-    /n\/a|\b(no|without|not)\b[^.]{0,20}job description/i.test(
+    /n\/a|\b(no|without|not)\b[^.]{0,20}job description|job description[^.]{0,20}(missing|not provided|absent)/i.test(
       `${analysis.ats_level} ${analysis.summary}`,
     )
   );
