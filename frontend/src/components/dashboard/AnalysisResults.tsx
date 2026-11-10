@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ScoreBar } from "@/components/dashboard/ScoreBar";
+import { ScoreRing } from "@/components/dashboard/ScoreRing";
+import { CollapsibleCard } from "@/components/dashboard/CollapsibleCard";
 import type { ResumeAnalysis } from "@/types/resume";
 
 interface AnalysisResultsProps {
@@ -12,6 +14,17 @@ interface AnalysisResultsProps {
   // is no longer available — only the stored analysis is.
   onDownload?: () => void;
   downloading?: boolean;
+}
+
+/**
+ * Without a job description the model reports a 0 match and an "N/A" level.
+ * Showing "0/100" would read as a bad result rather than "not measured".
+ */
+function isMissingJobDescription(analysis: ResumeAnalysis): boolean {
+  return (
+    analysis.match_score === 0 &&
+    /n\/a|no job description/i.test(`${analysis.ats_level} ${analysis.summary}`)
+  );
 }
 
 export function AnalysisResults({
@@ -28,30 +41,29 @@ export function AnalysisResults({
     ["Readability", analysis.readability_score],
   ];
 
+  const hasJobMatch = !isMissingJobDescription(analysis);
+
   return (
     <div className="space-y-6">
       <Card className="p-6 sm:p-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Badge variant="accent">{analysis.ats_level}</Badge>
-            <p className="mt-3 max-w-xl text-ink-muted">{analysis.summary}</p>
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <ScoreRing value={analysis.score} label="overall" />
+            {hasJobMatch && (
+              <ScoreRing value={analysis.match_score} label="job match" size={96} />
+            )}
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center rounded-md border border-accent-soft bg-accent-soft px-5 py-3">
-              <span className="font-display text-2xl font-semibold text-accent">
-                {analysis.score}
-                <span className="text-sm font-normal text-accent/70">/100</span>
-              </span>
-              <span className="text-xs text-accent/80">overall</span>
-            </div>
-            <div className="flex flex-col items-center rounded-md border border-border px-5 py-3">
-              <span className="font-display text-2xl font-semibold text-ink">
-                {analysis.match_score}
-                <span className="text-sm font-normal text-ink-faint">/100</span>
-              </span>
-              <span className="text-xs text-ink-faint">job match</span>
-            </div>
+          <div className="min-w-0">
+            <Badge variant={hasJobMatch ? "accent" : "neutral"}>
+              {hasJobMatch ? analysis.ats_level : "No job description"}
+            </Badge>
+            <p className="mt-3 max-w-xl text-ink-muted">{analysis.summary}</p>
+            {!hasJobMatch && (
+              <p className="mt-2 text-sm text-ink-faint">
+                Add a job description to see how well this resume matches a role.
+              </p>
+            )}
           </div>
         </div>
 
@@ -62,9 +74,8 @@ export function AnalysisResults({
         </div>
       </Card>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Card className="p-6">
-          <h3 className="mb-3 font-medium text-ink">Strengths</h3>
+      <div className="grid items-start gap-6 sm:grid-cols-2">
+        <CollapsibleCard title="Strengths" count={analysis.strengths.length}>
           <ul className="space-y-2">
             {analysis.strengths.map((item) => (
               <li key={item} className="flex gap-2 text-sm text-ink-muted">
@@ -73,10 +84,9 @@ export function AnalysisResults({
               </li>
             ))}
           </ul>
-        </Card>
+        </CollapsibleCard>
 
-        <Card className="p-6">
-          <h3 className="mb-3 font-medium text-ink">Weaknesses</h3>
+        <CollapsibleCard title="Weaknesses" count={analysis.weaknesses.length}>
           <ul className="space-y-2">
             {analysis.weaknesses.map((item) => (
               <li key={item} className="flex gap-2 text-sm text-ink-muted">
@@ -85,33 +95,36 @@ export function AnalysisResults({
               </li>
             ))}
           </ul>
-        </Card>
+        </CollapsibleCard>
       </div>
 
-      <Card className="p-6">
-        <h3 className="mb-3 font-medium text-ink">Keyword match</h3>
-        <div className="flex flex-wrap gap-2">
-          {analysis.matching_skills.map((skill) => (
-            <Badge key={skill} variant="success">
-              {skill}
-            </Badge>
-          ))}
-          {analysis.missing_skills.map((skill) => (
-            <Badge key={skill} variant="neutral" className="line-through opacity-60">
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      </Card>
+      {(analysis.matching_skills.length > 0 || analysis.missing_skills.length > 0) && (
+        <CollapsibleCard
+          title="Keyword match"
+          count={analysis.matching_skills.length + analysis.missing_skills.length}
+        >
+          <div className="flex flex-wrap gap-2">
+            {analysis.matching_skills.map((skill) => (
+              <Badge key={skill} variant="success">
+                {skill}
+              </Badge>
+            ))}
+            {analysis.missing_skills.map((skill) => (
+              <Badge key={skill} variant="neutral" className="line-through opacity-60">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </CollapsibleCard>
+      )}
 
-      <Card className="p-6">
-        <h3 className="mb-3 font-medium text-ink">Suggestions</h3>
+      <CollapsibleCard title="Suggestions" count={analysis.suggestions.length}>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-muted">
           {analysis.suggestions.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </Card>
+      </CollapsibleCard>
 
       {onDownload && (
         <Button
