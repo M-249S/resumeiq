@@ -21,6 +21,21 @@ logger = logging.getLogger(__name__)
 GEMINI_RETRIES = 3
 RETRY_DELAY = 2
 
+# Sent to the model in place of an empty job description. Without it the
+# models compare the resume against nothing and return 0 for every score.
+NO_JOB_DESCRIPTION_NOTE = (
+    "[NO JOB DESCRIPTION PROVIDED]\n"
+    "Do not compare the resume against a job. Review it on its own merits as "
+    "a general ATS review for the candidate's apparent field. "
+    "Set match_score to 0 and ats_level to exactly \"N/A\" (this overrides "
+    "the ats_level rule). Still score score, formatting_score, keyword_score "
+    "(coverage of strong, standard keywords for the candidate's field), "
+    "experience_score, skills_score, education_score and readability_score "
+    "from the resume's own quality; never return 0 for them just because "
+    "there is no job description. Leave matching_skills and missing_skills "
+    "empty. Suggestions must be general improvements to the resume itself."
+)
+
 
 # ---------------------------------------------------
 # Helpers
@@ -72,6 +87,12 @@ def analyze_resume(
     fake data (e.g. the public demo) can report an outage instead.
     """
 
+    # Real providers get an explicit instruction when there is no job
+    # description; the mock keeps the original (empty) value.
+    ai_job_description = (
+        job_description if job_description.strip() else NO_JOB_DESCRIPTION_NOTE
+    )
+
     # -------------------------
     # Gemini
     # -------------------------
@@ -81,7 +102,7 @@ def analyze_resume(
         result = _retry(
             gemini_analyze,
             resume_text=resume_text,
-            job_description=job_description,
+            job_description=ai_job_description,
             retries=GEMINI_RETRIES,
             delay=RETRY_DELAY,
             provider="Gemini",
@@ -100,7 +121,7 @@ def analyze_resume(
 
             return openrouter_analyze(
                 resume_text=resume_text,
-                job_description=job_description,
+                job_description=ai_job_description,
             )
 
         except Exception as exc:
