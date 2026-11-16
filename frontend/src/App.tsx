@@ -7,6 +7,7 @@ import { Login } from "@/pages/Login";
 import { Signup } from "@/pages/Signup";
 import { Dashboard } from "@/pages/Dashboard";
 import { History } from "@/pages/History";
+import { Settings } from "@/pages/Settings";
 import { Try } from "@/pages/Try";
 import { Privacy } from "@/pages/Privacy";
 import { Terms } from "@/pages/Terms";
@@ -35,6 +36,14 @@ function App() {
           element={
             <ProtectedRoute>
               <History />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

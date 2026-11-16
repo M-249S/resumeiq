@@ -3,6 +3,8 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 
+from pydantic import BaseModel
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -17,6 +19,41 @@ router = APIRouter(
     prefix="/users",
     tags=["Users"],
 )
+
+
+class DeleteAccountRequest(BaseModel):
+    # Typed by the user to confirm. Works for password and Google accounts
+    # alike (Google-created accounts have no password to re-enter).
+    confirm_email: str
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_my_account(
+    payload: DeleteAccountRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Permanently delete the signed-in user and all of their analyses.
+
+    The caller must type their own email address as confirmation, so a
+    stray request (or a stolen-but-unattended session click) cannot wipe
+    an account by accident.
+    """
+    if payload.confirm_email.strip().lower() != current_user.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The email you typed does not match your account.",
+        )
+
+    user = db.get(User, current_user.id)
+
+    if user is not None:
+        # resume_analyses are removed by the ORM cascade on the relationship.
+        db.delete(user)
+        db.commit()
+
+    return None
 
 
 def _get_owned_analysis(

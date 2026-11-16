@@ -56,6 +56,12 @@ export function Navbar() {
             >
               History
             </Link>
+            <Link
+              to="/settings"
+              className="text-sm text-ink-muted transition-colors hover:text-ink"
+            >
+              Settings
+            </Link>
           </nav>
         )}
 
@@ -119,6 +125,13 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                 >
                   History
+                </Link>
+                <Link
+                  to="/settings"
+                  className="text-sm text-ink-muted"
+                  onClick={() => setOpen(false)}
+                >
+                  Settings
                 </Link>
                 {user && (
                   <span className="text-sm text-ink-faint">{user.full_name}</span>
