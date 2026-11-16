@@ -3,6 +3,9 @@ import { Logo } from "@/components/ui/Logo";
 
 const linkClass = "text-sm text-ink-muted transition-colors hover:text-ink";
 
+// Computed once at module load, not during render.
+const CURRENT_YEAR = new Date().getFullYear();
+
 export function Footer() {
   return (
     <footer className="border-t border-border">
@@ -27,7 +30,7 @@ export function Footer() {
         </nav>
 
         <p className="text-sm text-ink-faint">
-          Built by Mujahid Adam &middot; {new Date().getFullYear()}
+          Built by Mujahid Adam &middot; {CURRENT_YEAR}
         </p>
       </div>
     </footer>

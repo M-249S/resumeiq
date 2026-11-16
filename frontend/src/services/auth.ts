@@ -33,3 +33,11 @@ export async function loginWithGoogleCredential(credential: string): Promise<Tok
   const response = await api.post<TokenResponse>("/auth/google", { credential });
   return response.data;
 }
+
+/**
+ * Permanently deletes the signed-in account and all of its analyses. The
+ * backend requires the account's own email as confirmation.
+ */
+export async function deleteAccount(confirmEmail: string): Promise<void> {
+  await api.delete("/users/me", { data: { confirm_email: confirmEmail } });
+}

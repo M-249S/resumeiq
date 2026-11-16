@@ -52,10 +52,10 @@ export function Privacy() {
       <LegalSection heading="Keeping and deleting your data">
         <p>
           You can delete any past analysis yourself from the History page.
-          To have your whole account and its data removed, contact me through my
-          GitHub profile (github.com/M-249S) and I will delete it. During the
-          beta, the database may also be reset or migrated, so keep your own
-          copy of anything important.
+          To remove your whole account and all of its data, use Delete account
+          in Settings: it takes effect immediately and cannot be undone.
+          During the beta, the database may also be reset or migrated, so keep
+          your own copy of anything important.
         </p>
       </LegalSection>
 
