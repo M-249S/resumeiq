@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Card } from "@/components/ui/Card";
@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/hooks/useToast";
 import { friendlyErrorMessage } from "@/lib/errors";
 import { AnalysisResults } from "@/components/dashboard/AnalysisResults";
+import { ScoreTrend } from "@/components/dashboard/ScoreTrend";
+import { mostImprovedSeries, scoreDeltas } from "@/lib/history";
 import {
   getResumeHistory,
   getResumeHistoryDetail,
@@ -30,6 +32,9 @@ export function History() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const toast = useToast();
+
+  const deltas = useMemo(() => scoreDeltas(items ?? []), [items]);
+  const trend = useMemo(() => mostImprovedSeries(items ?? []), [items]);
 
   const loadHistory = useCallback(async () => {
     setError("");
@@ -152,6 +157,8 @@ export function History() {
               </Card>
             )}
 
+            {trend.length >= 2 && <ScoreTrend series={trend} />}
+
             {items !== null && items.length > 0 && (
               <ul className="space-y-3">
                 {items.map((item) => (
@@ -175,8 +182,23 @@ export function History() {
                       </button>
 
                       <div className="flex shrink-0 items-center gap-3">
+                        {deltas.has(item.id) && deltas.get(item.id) !== 0 && (
+                          <span
+                            className={
+                              (deltas.get(item.id) ?? 0) > 0
+                                ? "text-xs font-medium text-success"
+                                : "text-xs font-medium text-danger"
+                            }
+                            title="Change since the previous analysis of this file"
+                          >
+                            {(deltas.get(item.id) ?? 0) > 0 ? "▲ +" : "▼ −"}
+                            {Math.abs(deltas.get(item.id) ?? 0)}
+                          </span>
+                        )}
                         <Badge variant="accent">{item.score} overall</Badge>
-                        <Badge variant="neutral">{item.match_score} match</Badge>
+                        <Badge variant="neutral" title={item.match_score > 0 ? undefined : "Analyzed without a job description"}>
+                          {item.match_score > 0 ? `${item.match_score} match` : "No JD"}
+                        </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
