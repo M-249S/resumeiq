@@ -2,7 +2,7 @@ import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export function Terms() {
   return (
-    <LegalLayout title="Terms of Use" updated="7 November 2026">
+    <LegalLayout title="Terms of Use" updated="20 November 2026">
       <p className="leading-relaxed text-ink-muted">
         By creating an account or using ResumeIQ you agree to these terms.
         ResumeIQ is a free beta service run by Mujahid Adam.

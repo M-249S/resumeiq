@@ -2,7 +2,7 @@ import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export function Privacy() {
   return (
-    <LegalLayout title="Privacy Policy" updated="7 November 2026">
+    <LegalLayout title="Privacy Policy" updated="20 November 2026">
       <p className="leading-relaxed text-ink-muted">
         ResumeIQ is a beta project built and run by Mujahid Adam. This page
         explains, in plain language, what data the app handles and why.
