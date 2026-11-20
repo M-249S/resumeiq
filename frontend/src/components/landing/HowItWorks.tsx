@@ -21,7 +21,7 @@ const steps: Step[] = [
   {
     icon: FileDown,
     title: "Export",
-    description: "Download a polished, ATS-ready resume and cover letter.",
+    description: "Download your improved resume and a tailored cover letter.",
   },
 ];
 

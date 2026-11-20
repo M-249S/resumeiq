@@ -61,13 +61,13 @@ export function GoogleSignInButton({ onCredential, onError }: Props) {
 
   useEffect(() => {
     if (!CLIENT_ID) return;
-    let cancelled = false;
+    const abort = new AbortController();
 
     loadGoogleScript()
       .then(() => {
         const container = containerRef.current;
         const google = window.google;
-        if (cancelled || !container || !google) return;
+        if (abort.signal.aborted || !container || !google) return;
 
         google.accounts.id.initialize({
           client_id: CLIENT_ID,
@@ -86,7 +86,7 @@ export function GoogleSignInButton({ onCredential, onError }: Props) {
       .catch(() => handlers.current.onError("Couldn't load Google sign-in. Check your connection."));
 
     return () => {
-      cancelled = true;
+      abort.abort();
     };
   }, [theme]);
 
