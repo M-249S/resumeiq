@@ -57,7 +57,7 @@ pyasn1_modules==0.4.2
 pycparser==3.12
 pydantic==2.14.3
 pydantic_core==2.50.4
-pypdf==6.21.4
+pypdf==7.0.1
 python-docx==1.2.0
 python-dotenv==1.2.4
 python-jose==3.5.0
