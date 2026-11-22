@@ -96,7 +96,7 @@ Other practices:
 - **Supply chain:** third-party GitHub Actions are pinned to commit SHAs, workflows run with least-privilege `permissions`, and dependencies are pinned.
 - **Dependabot** opens grouped weekly update PRs for pip, npm, Docker and GitHub Actions. Each must pass the full pipeline before merging.
 - **Secrets** are never committed. They are supplied through environment variables and the hosting dashboards.
-- **Abuse protection:** rate limits on the AI endpoints, an explicit CORS allowlist, upload size and page caps, and a daily budget on the guest demo.
+- **Abuse protection:** per-IP rate limits and a per-user daily allowance on the AI endpoints, an explicit CORS allowlist, upload size and page caps, and a global daily budget on the guest demo.
 - **Data lifecycle:** users can delete their account and data themselves, and database schema changes go through Alembic migrations applied automatically on container start.
 
 ---
@@ -204,6 +204,7 @@ Backend environment variables (see `backend/.env.example`):
 | `GOOGLE_CLIENT_ID` | no | Enables Google sign-in (must match the frontend client ID) |
 | `TRUST_PROXY_HEADERS` | no | Set to `1` behind a reverse proxy so rate limits use the real client IP |
 | `DEMO_DAILY_LIMIT` | no | Guest demo analyses allowed per day (default 100) |
+| `USER_DAILY_AI_LIMIT` | no | AI requests one signed-in account may make per UTC day (default 30) |
 
 Without an AI key the analysis falls back to a simple built-in heuristic so the app still runs, but cover letters need a working AI provider. Deployment steps are in [`backend/DEPLOY.md`](backend/DEPLOY.md).
 

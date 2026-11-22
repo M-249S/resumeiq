@@ -29,6 +29,7 @@ from app.services.ai_client import AIUnavailableError
 from app.services.cover_letter_service import generate_cover_letter
 from app.services.gemini_service import rewrite_resume
 from app.services.pdf_service import generate_resume_pdf
+from app.services.user_quota import user_quota
 from app.services.word_service import generate_cover_letter_docx
 router = APIRouter()
 
@@ -46,6 +47,27 @@ DEMO_MAX_PAGES = 4
 DEMO_MAX_RESUME_CHARS = 12000
 DEMO_MAX_JOB_CHARS = 4000
 AI_BUSY_MESSAGE = "The AI service is busy right now. Please try again in a minute."
+
+
+def ai_quota(current_user: User = Depends(get_current_user)):
+    """
+    Charge one unit of the signed-in user's daily AI allowance for this
+    request. The unit is given back if the handler raises, because a
+    rejected upload or a failed AI call should not cost the user anything.
+    """
+    if not user_quota.try_consume(current_user.id):
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"You've reached today's limit of {user_quota.limit} AI requests. "
+                "It resets at midnight UTC, so please try again tomorrow."
+            ),
+        )
+    try:
+        yield
+    except Exception:
+        user_quota.refund(current_user.id)
+        raise
 
 
 def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
@@ -68,6 +90,7 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> tuple[str, int]:
 
 @router.post(
     "/resume/upload",
+    dependencies=[Depends(ai_quota)],
     response_model=ResumeUploadResponse,
     tags=["Resume"],
 )
@@ -191,6 +214,7 @@ async def demo_resume_analysis(
 
 @router.post(
     "/resume/improve",
+    dependencies=[Depends(ai_quota)],
     tags=["Resume"],
 )
 @limiter.limit(AI_RATE_LIMIT)
@@ -218,6 +242,7 @@ async def improve_resume(
 
 @router.post(
     "/resume/download",
+    dependencies=[Depends(ai_quota)],
     tags=["Resume"],
 )
 @limiter.limit(AI_RATE_LIMIT)
@@ -255,6 +280,7 @@ async def download_resume(
 
 @router.post(
     "/resume/cover-letter",
+    dependencies=[Depends(ai_quota)],
     response_model=CoverLetterResponse,
     tags=["Resume"],
 )
@@ -299,6 +325,7 @@ async def cover_letter(
 
 @router.post(
     "/resume/cover-letter/download",
+    dependencies=[Depends(ai_quota)],
     tags=["Resume"],
 )
 @limiter.limit(AI_RATE_LIMIT)

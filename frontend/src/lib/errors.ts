@@ -14,10 +14,14 @@ export function friendlyErrorMessage(
     if (!err.response) {
       return "Can't reach the server. It may be waking up, so wait a few seconds and try again.";
     }
-    if (err.response.status === 429) {
-      return "You've hit the limit for now. Please wait a minute and try again.";
-    }
     const detail = err.response.data?.detail;
+    if (err.response.status === 429) {
+      // Daily allowances carry their own explanation; plain per-minute
+      // rate limits have no detail and get the generic wording.
+      return typeof detail === "string"
+        ? detail
+        : "You've hit the limit for now. Please wait a minute and try again.";
+    }
     if (err.response.status === 413) {
       // The demo endpoint has a smaller limit than the signed-in one, so
       // prefer the server's own message over a hard-coded size.
