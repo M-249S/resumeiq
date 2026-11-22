@@ -1,74 +1,74 @@
-# Deploying to Render
+# Deploying the backend
 
-The backend already targets Postgres (`DATABASE_URL=postgresql+psycopg://...`
-in `.env.example`, `psycopg[binary]` in `requirements.txt`, Alembic
-migrations in `alembic/versions/`) — this doc covers what's specific to
-Render on top of that.
+The backend runs as a Docker web service on **Render**, with **Neon**
+serverless Postgres as the database. The frontend is deployed separately
+on **Vercel**.
 
-## What changed to make this Render-ready
+The app reads everything from environment variables, so the same image
+works locally, in CI and on Render. `app/db/session.py` accepts a bare
+`postgresql://` URL (the format Neon and most providers hand out) and
+rewrites it to the `postgresql+psycopg://` dialect that psycopg 3 needs,
+and `alembic/env.py` reuses that function, so migrations and the app
+always connect the same way.
 
-1. **`Dockerfile` now binds to `$PORT`, not a hard-coded 8000.**
-   Render assigns the port your container must listen on via the `PORT`
-   env var (defaulting to 10000 if you don't set one yourself). The CMD
-   is now `uvicorn ... --port ${PORT:-8000}`, so it works whether Render
-   sets `PORT` or not, and local `docker run` without it still falls
-   back to 8000.
+The Dockerfile runs `alembic upgrade head` before starting uvicorn on
+every boot, so a fresh deploy always has an up-to-date schema.
 
-2. **`app/db/session.py` normalizes the database URL.** Render's
-   `fromDatabase` connection string uses the bare `postgresql://` scheme
-   (the psycopg2 dialect). This project installs **psycopg 3**, which
-   SQLAlchemy only picks correctly if the URL says
-   `postgresql+psycopg://`. `_normalize_database_url()` rewrites the
-   scheme automatically, so you can paste Render's connection string
-   as-is — no manual edit. `alembic/env.py` reuses the same function so
-   migrations and the running app always agree on how to connect.
-   Verified locally against a real Postgres 16 instance with both a
-   bare `postgresql://` URL and a `+psycopg` one — both work.
+## 1. Create the database (Neon)
 
-3. **`render.yaml`** (repo root) is a Render Blueprint: one file that
-   provisions the web service *and* its Postgres database together,
-   wires `DATABASE_URL` between them automatically, and generates
-   `SECRET_KEY` for you. This is optional — you can also click through
-   the dashboard manually (steps below) — but it means the whole setup
-   is reproducible from the repo instead of living only in Render's UI.
+1. Create a free project at <https://neon.tech>. Pick the region closest
+   to your Render service (this project uses AWS US West, Oregon, next to
+   Render's Oregon region).
+2. Open **Connect** and copy the **direct** connection string, not the
+   pooled one. It looks like
+   `postgresql://user:password@ep-xxxx.us-west-2.aws.neon.tech/dbname?sslmode=require`.
+   Keep `?sslmode=require`.
 
-## Option A — deploy via Blueprint (recommended)
+## 2. Create the backend service (Render)
 
-1. Push these changes to GitHub first.
-2. In the Render dashboard: **New -> Blueprint**, pick this repo.
-   Render reads `render.yaml` from the repo root and shows you the
-   `resumeiq-backend` web service + `resumeiq-db` database it's about
-   to create.
-3. Click **Apply**. Render creates the Postgres database first, then
-   builds and deploys the web service, wiring `DATABASE_URL` from the
-   database into the service automatically.
-4. Once it's live, open the service's **Environment** tab and fill in
-   the variables marked `sync: false` in `render.yaml`:
-   - `CORS_ORIGINS` — your deployed frontend's origin, e.g.
-     `https://resumeiq.vercel.app` (comma-separate if there's more than
-     one, e.g. a preview URL too)
-   - `GEMINI_API_KEY` and/or `OPENROUTER_API_KEY` — at least one, or
-     the app falls back to mock analysis data
-5. Redeploy (or it picks up new env vars on the next deploy
-   automatically, depending on your Render settings).
+### Option A: Blueprint (recommended)
 
-## Option B — deploy manually (no Blueprint)
+`render.yaml` at the repo root describes the web service.
 
-1. **New -> PostgreSQL.** Name it, pick the **Free** plan, create it.
-   Copy its **Internal Database URL** (same-region services should use
-   the internal URL — it's faster and doesn't leave Render's network).
-2. **New -> Web Service -> Docker.** Point it at this repo,
-   `backend/Dockerfile` as the Dockerfile path, `backend` as the root
-   directory.
-3. Add environment variables on the service:
-   | Key | Value |
-   |---|---|
-   | `DATABASE_URL` | the Postgres URL from step 1 (paste as-is — the app rewrites the scheme itself) |
-   | `SECRET_KEY` | output of `python -c "import secrets; print(secrets.token_hex(32))"` |
-   | `CORS_ORIGINS` | your frontend's deployed URL |
-   | `GEMINI_API_KEY` / `OPENROUTER_API_KEY` | at least one |
-4. Set **Health Check Path** to `/health` in the service settings.
-5. Deploy.
+1. Push the repo to GitHub.
+2. In the Render dashboard choose **New -> Blueprint** and pick the repo.
+3. Apply it. Render builds the Docker image from `backend/Dockerfile`.
+4. Open the service's **Environment** tab and fill in the variables
+   marked `sync: false` in `render.yaml` (table below).
+
+### Option B: manual
+
+1. **New -> Web Service -> Docker.** Point it at the repo, set
+   `backend` as the root directory and `./Dockerfile` as the Dockerfile.
+2. Choose the **Free** plan and set **Health Check Path** to `/health`.
+3. Add the environment variables from the table below.
+
+## Environment variables
+
+| Key | Required | Value |
+|---|---|---|
+| `DATABASE_URL` | yes | The Neon direct connection string from step 1 (paste as-is) |
+| `SECRET_KEY` | yes | Generated by the Blueprint, or `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `CORS_ORIGINS` | yes | Your frontend origin(s), comma-separated, exact match (for example `https://resumeiq-amber.vercel.app`) |
+| `OPENROUTER_API_KEY` | for real AI output | OpenRouter key (`GEMINI_API_KEY` is also accepted by the provider chain) |
+| `OPENROUTER_MODEL` | no | Set in `render.yaml`; change it there, because Blueprint sync overwrites dashboard edits to keys that have a value in the file |
+| `GOOGLE_CLIENT_ID` | no | Enables Google sign-in; must match the frontend `VITE_GOOGLE_CLIENT_ID` |
+| `TRUST_PROXY_HEADERS` | recommended | `1` on Render, so rate limits use the real client IP from `X-Forwarded-For` instead of the proxy's address |
+| `DEMO_DAILY_LIMIT` | no | Guest demo analyses allowed per day (default 100) |
+
+Never commit these values. `render.yaml` marks secrets `sync: false` so
+they exist only in the Render dashboard.
+
+## 3. Frontend (Vercel)
+
+The frontend is a Vite single-page app in `frontend/`. Set its root
+directory to `frontend` and add:
+
+- `VITE_API_URL`: the backend URL, for example `https://<your-service>.onrender.com`
+- `VITE_GOOGLE_CLIENT_ID`: optional, for Google sign-in
+
+`frontend/vercel.json` rewrites every path to `index.html`, so deep links
+such as `/try` or `/history` load instead of returning a 404.
 
 ## Verifying it worked
 
@@ -81,25 +81,25 @@ curl -X POST https://<your-service>.onrender.com/auth/register \
   -d '{"full_name":"Test","email":"test@example.com","password":"SuperSecret123!"}'
 ```
 
-If registration returns a user object, the app reached Postgres and
-Alembic's migrations ran (the Dockerfile runs `alembic upgrade head`
-before starting uvicorn on every boot, so a fresh deploy always has an
-up-to-date schema).
+If registration returns a user object, the app reached Postgres and the
+migrations ran. Check **Tables** in the Neon console to see the schema.
 
-## Free-tier things worth knowing before you rely on this
+## Free-tier things worth knowing
 
-- **Free Postgres expires.** Render's free database becomes
-  inaccessible 30 days after creation, then is deleted ~14 days after
-  that if you haven't upgraded. There's no backup to restore from on
-  the free plan. Render emails you before both deadlines. Fine for a
-  portfolio demo; set a reminder, or upgrade the DB plan, if you want
-  this to keep working past a month.
-- **Free web services sleep.** After 15 minutes with no traffic, the
-  service spins down; the next request wakes it, which takes about a
-  minute (the visitor sees a Render loading page meanwhile). This is
-  why a demo link can feel slow on the first hit after a while — not a
-  bug.
-- **CORS_ORIGINS must be exact.** It's an exact-match allowlist, not a
-  wildcard — `https://resumeiq.vercel.app` and
-  `https://resumeiq-git-main.vercel.app` are different origins if you
-  use preview deployments too.
+- **Render sleeps.** After 15 minutes without traffic the free web
+  service spins down, and the next request takes about a minute to wake
+  it. That is why the first visit to a demo link can feel slow.
+- **Neon suspends compute when idle** (after about 5 minutes) and wakes
+  on the next query, which adds a short delay to the first request. The
+  free plan includes 1 GB of storage and a monthly compute allowance.
+  `pool_pre_ping` is enabled in `app/db/session.py`, so connections that
+  went away while the database slept are replaced transparently.
+- **No keep-alive pings.** A `/health` check that touches the database
+  would keep Neon awake and use up the free compute allowance, so
+  `/health` deliberately does not query it.
+- **CORS_ORIGINS must be exact.** It is an allowlist, not a wildcard:
+  `https://resumeiq-amber.vercel.app` and a Vercel preview URL are
+  different origins, so list each one you need.
+- **Email is not available yet.** Render blocks outbound SMTP ports on
+  free instances, so email features (verification, password reset) need
+  an HTTPS email API with a verified sending domain.
