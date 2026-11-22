@@ -55,6 +55,7 @@ every boot, so a fresh deploy always has an up-to-date schema.
 | `GOOGLE_CLIENT_ID` | no | Enables Google sign-in; must match the frontend `VITE_GOOGLE_CLIENT_ID` |
 | `TRUST_PROXY_HEADERS` | recommended | `1` on Render, so rate limits use the real client IP from `X-Forwarded-For` instead of the proxy's address |
 | `DEMO_DAILY_LIMIT` | no | Guest demo analyses allowed per day (default 100) |
+| `USER_DAILY_AI_LIMIT` | no | AI requests one signed-in account may make per UTC day (default 30) |
 
 Never commit these values. `render.yaml` marks secrets `sync: false` so
 they exist only in the Render dashboard.
