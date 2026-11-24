@@ -10,9 +10,9 @@ AI-powered ATS resume analyzer and optimizer. Upload a PDF resume (and optionall
 
 > The backend runs on a free Render instance, so the first request after a period of inactivity can take about a minute while the service wakes up.
 
-![Analysis results: overall and job-match scores with a breakdown by category](docs/results-overview.png)
+![Analysis results: overall and job-match scores with a breakdown by category](docs/analysis-scores.png)
 
-![Keyword match, suggestions and resume download](docs/results-keywords.png)
+![Keyword match and tailored suggestions](docs/analysis-keywords.png)
 
 ---
 

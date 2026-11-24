@@ -29,9 +29,7 @@ export function Footer() {
           </a>
         </nav>
 
-        <p className="text-sm text-ink-faint">
-          Built by Mujahid Adam &middot; {CURRENT_YEAR}
-        </p>
+        <p className="text-sm text-ink-faint">&copy; {CURRENT_YEAR} ResumeIQ</p>
       </div>
     </footer>
   );
